@@ -1,0 +1,46 @@
+name: CROUS monitor
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # GitHub may delay runs by a few minutes
+  workflow_dispatch:          # lets you start it manually from the Actions tab
+
+permissions:
+  contents: write             # needed to save seen_listings.sqlite3 back to the repo
+
+concurrency:
+  group: crous-monitor        # never two runs at once (avoids duplicate alerts)
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Poll CROUS for ~14 minutes
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TARGET_URL: ${{ secrets.TARGET_URL }}
+          CHECK_INTERVAL_SECONDS: "60"
+          HEADLESS: "true"
+        run: python main.py --duration 840
+
+      - name: Save seen listings (so you aren't re-alerted)
+        if: always()
+        run: |
+          git config user.name "crous-bot"
+          git config user.email "crous-bot@users.noreply.github.com"
+          git add seen_listings.sqlite3
+          git diff --cached --quiet || git commit -m "Update seen listings [skip ci]"
+          git pull --rebase -X theirs || true
+          git push || true
