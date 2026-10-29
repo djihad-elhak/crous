@@ -6,7 +6,7 @@ The search page is an Angular app, so a plain HTTP client never sees the results
 
 | | |
 | --- | --- |
-| Author | Djihad El Hak Belkhir · [djihad-elhak](https://github.com/djihad-elhak) |
+| Author | Djoud El Hak Belkhir · [djihad-elhak](https://github.com/djihad-elhak) |
 | Licence | [MIT](LICENSE) |
 | Runtime | Python 3.12 on GitHub Actions; 3.11+ locally |
 | Alert channel | Telegram Bot API |
